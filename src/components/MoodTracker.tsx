@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Smile, Meh, Frown, Heart, Sparkles } from "lucide-react";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import moodIcon from "@/assets/mood-icon.jpg";
 
 const moods = [
@@ -13,6 +14,16 @@ const moods = [
 
 const MoodTracker = () => {
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
+  const { toast } = useToast();
+
+  const handleSaveMood = () => {
+    if (selectedMood === null) return;
+    
+    toast({
+      title: "¡Estado guardado!",
+      description: `Tu estado "${moods[selectedMood].label}" ha sido registrado exitosamente.`,
+    });
+  };
 
   return (
     <section id="estado-animo" className="py-20 bg-background">
@@ -59,7 +70,7 @@ const MoodTracker = () => {
                 })}
               </div>
               {selectedMood !== null && (
-                <Button variant="hero" className="w-full mt-6" size="lg">
+                <Button variant="hero" className="w-full mt-6" size="lg" onClick={handleSaveMood}>
                   Guardar mi estado
                 </Button>
               )}

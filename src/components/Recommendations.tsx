@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Music, Coffee, Sparkles, Users, Sun } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const activities = [
   {
@@ -41,6 +42,29 @@ const activities = [
 ];
 
 const Recommendations = () => {
+  const { toast } = useToast();
+
+  const handleStartActivity = (activity: string) => {
+    toast({
+      title: "¡Excelente elección!",
+      description: `Iniciando actividad: ${activity}`,
+    });
+  };
+
+  const handleExplore = (title: string) => {
+    toast({
+      title: `Explorando: ${title}`,
+      description: "Cargando contenido personalizado para ti...",
+    });
+  };
+
+  const handlePersonalize = () => {
+    toast({
+      title: "Personalización iniciada",
+      description: "Completa el cuestionario para recibir recomendaciones únicas.",
+    });
+  };
+
   return (
     <section id="recomendaciones" className="py-20 bg-background">
       <div className="container mx-auto px-4">
@@ -73,7 +97,7 @@ const Recommendations = () => {
               Toma 5 minutos para escribir tres cosas por las que estás agradecido hoy.
               Esta simple práctica puede aumentar significativamente tu bienestar emocional.
             </p>
-            <Button variant="secondary" size="lg">
+            <Button variant="secondary" size="lg" onClick={() => handleStartActivity("Práctica de Gratitud")}>
               Comenzar ahora
             </Button>
           </Card>
@@ -94,7 +118,7 @@ const Recommendations = () => {
                   <p className="text-sm text-muted-foreground mb-4">
                     {activity.description}
                   </p>
-                  <Button variant="ghost" className="w-full justify-start px-0">
+                  <Button variant="ghost" className="w-full justify-start px-0" onClick={() => handleExplore(activity.title)}>
                     Explorar →
                   </Button>
                 </Card>
@@ -112,7 +136,7 @@ const Recommendations = () => {
               Completa un breve cuestionario sobre tus intereses y necesidades
               para recibir sugerencias adaptadas específicamente para ti.
             </p>
-            <Button variant="hero" size="lg">
+            <Button variant="hero" size="lg" onClick={handlePersonalize}>
               Personalizar mi experiencia
             </Button>
           </Card>

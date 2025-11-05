@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MessageCircle, Send, Sparkles, Mic } from "lucide-react";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 const InteractiveChat = () => {
   const [message, setMessage] = useState("");
@@ -12,6 +13,7 @@ const InteractiveChat = () => {
       text: "Hola, soy tu asistente de bienestar. Estoy aquí para escucharte y ayudarte. ¿Cómo te sientes hoy?"
     }
   ]);
+  const { toast } = useToast();
 
   const handleSend = () => {
     if (!message.trim()) return;
@@ -26,6 +28,13 @@ const InteractiveChat = () => {
         text: "Gracias por compartir. Es completamente normal sentirse así. ¿Te gustaría que te sugiera algunas técnicas de relajación?"
       }]);
     }, 1000);
+  };
+
+  const handleVoiceInput = () => {
+    toast({
+      title: "Entrada por voz",
+      description: "La funcionalidad de voz estará disponible próximamente.",
+    });
   };
 
   return (
@@ -85,7 +94,7 @@ const InteractiveChat = () => {
             {/* Input */}
             <div className="p-4 border-t border-border bg-muted/30">
               <div className="flex gap-2">
-                <Button variant="outline" size="icon">
+                <Button variant="outline" size="icon" onClick={handleVoiceInput}>
                   <Mic className="w-5 h-5" />
                 </Button>
                 <Input

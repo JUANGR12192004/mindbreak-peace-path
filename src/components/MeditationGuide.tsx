@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Play, Clock, Sparkles, Volume2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import meditationIcon from "@/assets/meditation-icon.jpg";
 
 const meditations = [
@@ -31,6 +32,22 @@ const meditations = [
 ];
 
 const MeditationGuide = () => {
+  const { toast } = useToast();
+
+  const handleStartMeditation = (title: string) => {
+    toast({
+      title: "Iniciando meditación",
+      description: `Preparando "${title}". Encuentra un lugar tranquilo y ponte cómodo.`,
+    });
+  };
+
+  const handleAudioToggle = () => {
+    toast({
+      title: "Control de audio",
+      description: "Funcionalidad de audio disponible próximamente.",
+    });
+  };
+
   return (
     <section id="meditacion" className="py-20 bg-muted/30">
       <div className="container mx-auto px-4">
@@ -77,11 +94,11 @@ const MeditationGuide = () => {
                 y encontrar tu centro de paz interior.
               </p>
               <div className="flex gap-3">
-                <Button variant="hero" size="lg" className="flex-1">
+                <Button variant="hero" size="lg" className="flex-1" onClick={() => handleStartMeditation("Sesión de Relajación Profunda")}>
                   <Play className="w-5 h-5" />
                   Comenzar
                 </Button>
-                <Button variant="outline" size="lg">
+                <Button variant="outline" size="lg" onClick={handleAudioToggle}>
                   <Volume2 className="w-5 h-5" />
                 </Button>
               </div>
@@ -90,7 +107,7 @@ const MeditationGuide = () => {
             {/* Meditation List */}
             <div className="space-y-4">
               {meditations.map((meditation, index) => (
-                <Card key={index} className="p-6 gradient-card hover:shadow-card transition-all cursor-pointer">
+                <Card key={index} className="p-6 gradient-card hover:shadow-card transition-all cursor-pointer" onClick={() => handleStartMeditation(meditation.title)}>
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
@@ -107,7 +124,10 @@ const MeditationGuide = () => {
                         {meditation.duration}
                       </div>
                     </div>
-                    <Button variant="calm" size="icon">
+                    <Button variant="calm" size="icon" onClick={(e) => {
+                      e.stopPropagation();
+                      handleStartMeditation(meditation.title);
+                    }}>
                       <Play className="w-5 h-5" />
                     </Button>
                   </div>
