@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Smile, Meh, Frown, Heart, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import moodIcon from "@/assets/mood-icon.jpg";
 
 const moods = [
@@ -16,8 +17,33 @@ const MoodTracker = () => {
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const { toast } = useToast();
 
-  const handleSaveMood = () => {
+  const handleSaveMood = async () => {
     if (selectedMood === null) return;
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "Debes iniciar sesión para guardar tu estado de ánimo",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { error } = await supabase.from('mood_entries').insert({
+      user_id: user.id,
+      mood: moods[selectedMood].label
+    });
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo guardar tu estado",
+        variant: "destructive",
+      });
+      return;
+    }
     
     toast({
       title: "¡Estado guardado!",

@@ -1,9 +1,21 @@
-import { Brain, Menu } from "lucide-react";
+import { Brain, Menu, LogOut, User, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleAuthAction = async () => {
+    if (user) {
+      await signOut();
+    } else {
+      navigate("/auth");
+    }
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -39,9 +51,25 @@ const Header = () => {
           </nav>
 
           {/* CTA Button */}
-          <div className="hidden md:block">
-            <Button variant="hero" size="lg">
-              Comenzar Ahora
+          <div className="hidden md:flex items-center gap-4">
+            {user && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <User className="w-4 h-4" />
+                <span>{user.email}</span>
+              </div>
+            )}
+            <Button variant="hero" size="lg" onClick={handleAuthAction}>
+              {user ? (
+                <>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Cerrar Sesión
+                </>
+              ) : (
+                <>
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Iniciar Sesión
+                </>
+              )}
             </Button>
           </div>
 
@@ -72,8 +100,24 @@ const Header = () => {
             <a href="#chat" className="text-foreground hover:text-primary transition-smooth">
               Chat
             </a>
-            <Button variant="hero" size="lg" className="w-full">
-              Comenzar Ahora
+            {user && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <User className="w-4 h-4" />
+                <span>{user.email}</span>
+              </div>
+            )}
+            <Button variant="hero" size="lg" className="w-full" onClick={handleAuthAction}>
+              {user ? (
+                <>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Cerrar Sesión
+                </>
+              ) : (
+                <>
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Iniciar Sesión
+                </>
+              )}
             </Button>
           </nav>
         )}

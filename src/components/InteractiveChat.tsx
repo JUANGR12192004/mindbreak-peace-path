@@ -1,33 +1,116 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, Send, Sparkles, Mic } from "lucide-react";
-import { useState } from "react";
+import { MessageCircle, Send, Sparkles, Mic, LogOut, User } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { streamChat } from "@/utils/streamChat";
+import { supabase } from "@/integrations/supabase/client";
+
+type Message = { role: "user" | "assistant"; content: string };
 
 const InteractiveChat = () => {
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState([
-    {
-      type: "assistant",
-      text: "Hola, soy tu asistente de bienestar. Estoy aquí para escucharte y ayudarte. ¿Cómo te sientes hoy?"
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const handleSend = () => {
-    if (!message.trim()) return;
+  useEffect(() => {
+    if (!user) {
+      navigate("/auth");
+    } else {
+      loadMessages();
+    }
+  }, [user, navigate]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const loadMessages = async () => {
+    if (!user) return;
     
-    setMessages([...messages, { type: "user", text: message }]);
+    const { data, error } = await supabase
+      .from('chat_messages')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: true })
+      .limit(50);
+
+    if (!error && data) {
+      const loadedMessages = data.map(msg => ({
+        role: msg.role as "user" | "assistant",
+        content: msg.content
+      }));
+      setMessages(loadedMessages);
+    }
+  };
+
+  const saveMessage = async (role: "user" | "assistant", content: string) => {
+    if (!user) return;
+    
+    await supabase.from('chat_messages').insert({
+      user_id: user.id,
+      role,
+      content
+    });
+  };
+
+  const handleSend = async () => {
+    if (!message.trim() || isLoading) return;
+
+    const userMsg: Message = { role: "user", content: message };
+    setMessages(prev => [...prev, userMsg]);
     setMessage("");
-    
-    // Simulate response
-    setTimeout(() => {
-      setMessages(prev => [...prev, {
-        type: "assistant",
-        text: "Gracias por compartir. Es completamente normal sentirse así. ¿Te gustaría que te sugiera algunas técnicas de relajación?"
-      }]);
-    }, 1000);
+    setIsLoading(true);
+
+    await saveMessage("user", userMsg.content);
+
+    let assistantContent = "";
+    const upsertAssistant = (nextChunk: string) => {
+      assistantContent += nextChunk;
+      setMessages(prev => {
+        const last = prev[prev.length - 1];
+        if (last?.role === "assistant") {
+          return prev.map((m, i) => 
+            i === prev.length - 1 ? { ...m, content: assistantContent } : m
+          );
+        }
+        return [...prev, { role: "assistant", content: assistantContent }];
+      });
+    };
+
+    try {
+      await streamChat({
+        messages: [...messages, userMsg],
+        onDelta: (chunk) => upsertAssistant(chunk),
+        onDone: async () => {
+          setIsLoading(false);
+          await saveMessage("assistant", assistantContent);
+        },
+        onError: (error) => {
+          setIsLoading(false);
+          toast({
+            title: "Error",
+            description: error,
+            variant: "destructive",
+          });
+        }
+      });
+    } catch (e) {
+      console.error(e);
+      setIsLoading(false);
+      toast({
+        title: "Error",
+        description: "No se pudo enviar el mensaje",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleVoiceInput = () => {
@@ -37,12 +120,29 @@ const InteractiveChat = () => {
     });
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
+  };
+
+  if (!user) return null;
+
   return (
     <section id="chat" className="py-20 bg-muted/30">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="text-center mb-12">
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-2">
+                <User className="w-5 h-5 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">{user.email}</span>
+              </div>
+              <Button variant="outline" size="sm" onClick={handleSignOut}>
+                <LogOut className="w-4 h-4 mr-2" />
+                Cerrar sesión
+              </Button>
+            </div>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 border border-secondary/20 mb-4">
               <Sparkles className="w-4 h-4 text-secondary" />
               <span className="text-sm font-medium text-secondary">Espacio seguro</span>
@@ -73,22 +173,28 @@ const InteractiveChat = () => {
 
             {/* Messages */}
             <div className="p-6 space-y-4 min-h-[400px] max-h-[500px] overflow-y-auto bg-background">
+              {messages.length === 0 && (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                  <p>Escribe un mensaje para comenzar...</p>
+                </div>
+              )}
               {messages.map((msg, index) => (
                 <div
                   key={index}
-                  className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}
+                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
                     className={`max-w-[80%] p-4 rounded-2xl ${
-                      msg.type === "user"
+                      msg.role === "user"
                         ? "gradient-hero text-primary-foreground"
                         : "gradient-card border border-border"
                     }`}
                   >
-                    <p className="text-sm leading-relaxed">{msg.text}</p>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                   </div>
                 </div>
               ))}
+              <div ref={messagesEndRef} />
             </div>
 
             {/* Input */}
@@ -100,11 +206,17 @@ const InteractiveChat = () => {
                 <Input
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && handleSend()}
+                  onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
                   placeholder="Escribe tu mensaje aquí..."
                   className="flex-1"
+                  disabled={isLoading}
                 />
-                <Button variant="hero" size="icon" onClick={handleSend}>
+                <Button 
+                  variant="hero" 
+                  size="icon" 
+                  onClick={handleSend}
+                  disabled={isLoading || !message.trim()}
+                >
                   <Send className="w-5 h-5" />
                 </Button>
               </div>
@@ -125,9 +237,9 @@ const InteractiveChat = () => {
             </Card>
             <Card className="p-6 text-center gradient-card">
               <Sparkles className="w-8 h-8 mx-auto mb-3 text-secondary" />
-              <h4 className="font-bold mb-2">Sugerencias útiles</h4>
+              <h4 className="font-bold mb-2">IA real integrada</h4>
               <p className="text-sm text-muted-foreground">
-                Técnicas y recursos personalizados
+                Respuestas inteligentes personalizadas
               </p>
             </Card>
             <Card className="p-6 text-center gradient-card">
