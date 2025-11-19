@@ -29,6 +29,16 @@ const InteractiveChat = () => {
   }, [user, navigate]);
 
   useEffect(() => {
+    const handleMoodSelected = (event: any) => {
+      const { mood, context } = event.detail;
+      setMessage(`Hola, me siento ${mood.toLowerCase()}. ${context}`);
+    };
+    
+    window.addEventListener('moodSelected', handleMoodSelected);
+    return () => window.removeEventListener('moodSelected', handleMoodSelected);
+  }, []);
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
