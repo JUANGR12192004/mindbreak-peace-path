@@ -17,6 +17,23 @@ const Header = () => {
     }
   };
 
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    setIsMenuOpen(false);
+    
+    const target = document.querySelector(href);
+    if (target) {
+      const headerOffset = 80;
+      const elementPosition = target.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      });
+    }
+  };
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
       <div className="container mx-auto px-4">
@@ -33,19 +50,19 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#inicio" className="text-foreground hover:text-primary transition-smooth">
+            <a href="#inicio" onClick={(e) => handleNavClick(e, "#inicio")} className="text-foreground hover:text-primary transition-smooth">
               Inicio
             </a>
-            <a href="#estado-animo" className="text-foreground hover:text-primary transition-smooth">
+            <a href="#estado-animo" onClick={(e) => handleNavClick(e, "#estado-animo")} className="text-foreground hover:text-primary transition-smooth">
               Mi Estado
             </a>
-            <a href="#meditacion" className="text-foreground hover:text-primary transition-smooth">
+            <a href="#meditacion" onClick={(e) => handleNavClick(e, "#meditacion")} className="text-foreground hover:text-primary transition-smooth">
               Meditación
             </a>
-            <a href="#recomendaciones" className="text-foreground hover:text-primary transition-smooth">
+            <a href="#recomendaciones" onClick={(e) => handleNavClick(e, "#recomendaciones")} className="text-foreground hover:text-primary transition-smooth">
               Recomendaciones
             </a>
-            <a href="#chat" className="text-foreground hover:text-primary transition-smooth">
+            <a href="#chat" onClick={(e) => handleNavClick(e, "#chat")} className="text-foreground hover:text-primary transition-smooth">
               Chat
             </a>
           </nav>
@@ -85,19 +102,19 @@ const Header = () => {
         {/* Mobile Menu */}
         {isMenuOpen && (
           <nav className="md:hidden py-4 flex flex-col gap-4 border-t border-border">
-            <a href="#inicio" className="text-foreground hover:text-primary transition-smooth">
+            <a href="#inicio" onClick={(e) => handleNavClick(e, "#inicio")} className="text-foreground hover:text-primary transition-smooth">
               Inicio
             </a>
-            <a href="#estado-animo" className="text-foreground hover:text-primary transition-smooth">
+            <a href="#estado-animo" onClick={(e) => handleNavClick(e, "#estado-animo")} className="text-foreground hover:text-primary transition-smooth">
               Mi Estado
             </a>
-            <a href="#meditacion" className="text-foreground hover:text-primary transition-smooth">
+            <a href="#meditacion" onClick={(e) => handleNavClick(e, "#meditacion")} className="text-foreground hover:text-primary transition-smooth">
               Meditación
             </a>
-            <a href="#recomendaciones" className="text-foreground hover:text-primary transition-smooth">
+            <a href="#recomendaciones" onClick={(e) => handleNavClick(e, "#recomendaciones")} className="text-foreground hover:text-primary transition-smooth">
               Recomendaciones
             </a>
-            <a href="#chat" className="text-foreground hover:text-primary transition-smooth">
+            <a href="#chat" onClick={(e) => handleNavClick(e, "#chat")} className="text-foreground hover:text-primary transition-smooth">
               Chat
             </a>
             {user && (
