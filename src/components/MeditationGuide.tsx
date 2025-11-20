@@ -7,7 +7,7 @@ const MeditationGuide = () => {
 
   const meditations = [
     { id: "1", title: "Meditación para la ansiedad", videoId: "ZToicYcHIOU", duration: "10 min" },
-    { id: "2", title: "Respiración consciente", videoId: "SEfs5TJZ6Nk", duration: "5 min" },
+    { id: "2", title: "Respiración consciente", videoId: "db6xBherHfA", duration: "5 min" },
     { id: "3", title: "Meditación guiada para dormir", videoId: "1vx8iUvfyCY", duration: "20 min" },
   ];
 
